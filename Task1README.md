@@ -1,6 +1,5 @@
 # Task 1 – Time-Series Preprocessing, Exploratory Analysis and Forecasting (Household Electricity Consumption)
 
-> **Scope statement: this repository implements Task 1 only** of *Formative 1: Building a Pipeline for Time Series Data*. It does **not** contain the database designs (Task 2), CRUD/API endpoints (Task 3) or the API-based prediction script (Task 4), and must not be read as the complete assignment or its final PDF report.
 
 ## 1. Overview and problem definition
 Forecast a household's **average active power (`Global_active_power`, kW) one hour ahead** from hourly-aggregated history of the household's own measurements. Useful for household energy management, demand monitoring, efficiency baselines and short-term planning. The main deliverable is the executed notebook `notebooks/Task1_Time_Series_Preprocessing_EDA_Forecasting.ipynb`; the code in `src/` is imported and used by it.
@@ -87,7 +86,7 @@ Chronological split: train 22,964 / validation 4,921 / test 4,922 hourly rows. M
 | Code quality | `src/`, `tests/` | Modular functions with docstrings; 21 unit tests |
 | Documentation | this file, `data/README.md`, notebook Markdown | Setup, reproduction, limitations |
 
-Tasks 2–4, the group PDF report and individual-contribution criteria are **outside** this repository.
+
 
 ## 12. Troubleshooting
 * *"Dataset not found"* – place `household_power_consumption.txt` in `data/raw/`.
