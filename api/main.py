@@ -15,6 +15,8 @@ Endpoints (identical for /sql and /mongo):
 """
 from __future__ import annotations
 
+import utils.transport
+import utils.session
 import pymysql
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse

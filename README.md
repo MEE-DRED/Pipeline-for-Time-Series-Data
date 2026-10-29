@@ -8,9 +8,9 @@ Formative 1 (Machine Learning Pipeline, Group 2). The group forecasts a househol
 | 1 | EDA, preprocessing, lag / moving-average features, model + experiment table | `notebooks/`, `src/` | teammates |
 | **2** | **Relational (MySQL) and MongoDB design, ERD, sample documents, queries + results** | `database/`, `docs/database_design.md` | Honette |
 | 3 | CRUD + latest-record + date-range endpoints for both databases (FastAPI) | `api/` | Ketia |
-| 4 | Prediction script: fetch from API → preprocess → load model → predict | _to be added_ | Ketia |
+| 4 | Prediction script: fetch from API → preprocess → load model → predict | `prediction/` | Ketia |
 
-> Task 1 is documented in [`Task1README.md`](Task1README.md); Task 2 below; Task 3 in its own section further down.
+> Task 1 is documented in [`Task1README.md`](Task1README.md); Task 2 below; Tasks 3 and 4 in their own sections further down.
 
 ## Repository layout
 
@@ -25,6 +25,8 @@ database/
 data/processed/   hourly_observed.csv   (hourly data produced by Task 1)
 docs/             database_design.md    (design rationale, table dictionary, results summary)
 api/              main.py  sql_routes.py  mongo_routes.py  schemas.py  db.py          <- Task 3 (FastAPI)
+prediction/       predict.py                                                       <- Task 4
+tests/            test_pipeline.py (Task 1)  test_api.py (Tasks 3-4)
 docker-compose.yml  requirements.txt  .env.example
 ```
 
@@ -98,10 +100,39 @@ curl -X PUT http://127.0.0.1:8000/mongo/readings/<id> -H "Content-Type: applicat
 curl -X DELETE http://127.0.0.1:8000/mongo/readings/<id>
 ```
 
+## Task 4 - Prediction script (`prediction/predict.py`)
+
+```bash
+python -m prediction.predict                          # MySQL backend, origin = latest valid hour
+python -m prediction.predict --backend mongo --save   # MongoDB, and store the forecast in `forecasts`
+python -m prediction.predict --origin 2010-06-15T18:00:00 --show-features   # any historical hour; prints the 31 inputs
+```
+
+1. **Fetch** - `GET /{db}/readings/latest?valid_only=true` gives the forecast origin; `GET /{db}/readings/range`
+   fetches the preceding 195 h (longest feature look-back 168 h + fill limit + margin).
+2. **Preprocess** - reuses `src/` from Task 1: regular hourly grid (absent hours → NaN), 45-minute quality rule,
+   `Other_energy_Wh` re-derived, causal forward fill (≤ 3 h), then the same lag (1-168 h), rolling mean/std (3-168 h),
+   exogenous lag-1 and calendar features, in the exact column order saved in `best_model_metadata.json`.
+   If a gap longer than 3 h leaves a feature undefined, the script stops with a clear message instead of guessing.
+3. **Load** `outputs/models/best_model.joblib` (E4, tuned Random Forest).
+4. **Predict** `Global_active_power` for origin + 1 h; prints it with the persistence baseline and, because the data are
+   historical, the stored actual value and error when available. `--save` POSTs it to `/{db}/forecasts` (re-running replaces it).
+
+The script reproduces the Task 1 notebook's test-set predictions (max difference 5e-5 kW over 300 sampled hours, i.e. rounding).
+
+## Tests
+
+```bash
+pytest tests -v
+```
+`tests/test_pipeline.py` covers Task 1. `tests/test_api.py` runs the Mongo CRUD routes and an **end-to-end Task 3 → Task 4**
+test (HTTP fetch → preprocessing → model → stored forecast) against an in-memory MongoDB (`mongomock`), so no server is needed;
+the MySQL route tests run automatically when `power_db` is reachable and are skipped otherwise.
+
 ## Team contributions
 
 | Member | Main components |
 |---|---|
 | Honette Marie Ihozo | Task 2: ERD, SQL schema, MongoDB collection design, loaders, sample documents, queries and results |
 | Mildred Ewenrim Ebomah | _fill in_ |
-| Ketia Ineza Gakwaya | Task 3: FastAPI CRUD / time-series endpoints for MySQL and MongoDB |
+| Ketia Ineza Gakwaya | Tasks 3 and 4: FastAPI CRUD / time-series endpoints for MySQL and MongoDB, prediction script, API and end-to-end tests |
