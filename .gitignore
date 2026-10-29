@@ -6,10 +6,11 @@ venv/
 .ipynb_checkpoints/
 .pytest_cache/
 # Secrets
-.env
 # Large raw data and archives (obtain the original file separately)
 data/raw/*.txt
 data/raw/*.zip
 data/raw/*.csv
 # OS
 .DS_Store
+config.bat
+node_modules
